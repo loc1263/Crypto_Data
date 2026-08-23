@@ -242,7 +242,3 @@ pytest
 | `tests/test_exports_basic.py` | `_export_basic_csv` (enriquecimiento + escritura a CSV) |
 
 **Qué no cubren todavía:** `sources/*.py` (descargas reales vía ccxt) y las funciones públicas `exportar_*`/`calcular_atr_actual` que dependen de ellas — todas requieren red y no están mockeadas. Si se agrega un mock de ccxt (ej. con `unittest.mock` o `responses`) para simular las respuestas de Binance, esa sería la siguiente capa de tests a escribir.
-
-## Extender el proyecto
-
-Ver `mejoras_pendientes.md` para el backlog de mejoras conocidas (rendimiento de la opción 6, validación post-generación, vista cross-asset, etc.) — varias quedan más simples de implementar ahora que cada responsabilidad vive en su propio módulo.
