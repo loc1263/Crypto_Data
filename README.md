@@ -14,6 +14,7 @@ El punto de entrada es `criptodata.py`; toda la lógica vive en el paquete `core
 - [Fuentes de datos y columnas generadas](#fuentes-de-datos-y-columnas-generadas)
 - [Limitaciones conocidas](#limitaciones-conocidas)
 - [Estructura de archivos generados](#estructura-de-archivos-generados)
+- [Tests](#tests)
 - [Extender el proyecto](#extender-el-proyecto)
 
 ## Requisitos
@@ -222,8 +223,26 @@ Donde `SIMBOLO` es el símbolo normalizado para nombre de archivo (caracteres no
 
 La opción 6 (multi-timeframe) genera además una subcarpeta `output/AAAA-MM-DD_SIMBOLO_MTF/` con un CSV por timeframe.
 
+## Tests
+
+```bash
+pip install pytest
+pytest
+```
+
+`conftest.py` en la raíz hace que `pytest` inserte esta carpeta en `sys.path`, así que `pytest` funciona sin importar desde dónde se invoque. Los tests viven en `tests/` (uno por módulo de `core/`) y son 100% offline — no descargan nada de Binance:
+
+| Archivo | Cubre |
+|---|---|
+| `tests/test_indicators.py` | RMA de Wilder, RSI14 (casos límite: solo ganancias/pérdidas/sin movimiento), EMA/MACD, ATR14 (True Range calculado a mano), rolling 20, métricas derivadas y los 9 patrones de vela |
+| `tests/test_merge.py` | `merge_all_sources` (forward-fill selectivo, fuentes `None`/vacías) y `build_export_columns` (filtrado + orden canónico) |
+| `tests/test_utils.py` | `normalize_symbol_for_filename` y `serialize_value` |
+| `tests/test_exchange.py` | `spot_symbol`/`futures_symbol` (incluida la rareza de `"DOGE-USD"`, ver `mejoras_pendientes.md`) y las opciones de `init_exchange` |
+| `tests/test_config.py` | `load_config()` contra el `config.json` real, y las opciones fijas de timeframe/rango del menú |
+| `tests/test_exports_basic.py` | `_export_basic_csv` (enriquecimiento + escritura a CSV) |
+
+**Qué no cubren todavía:** `sources/*.py` (descargas reales vía ccxt) y las funciones públicas `exportar_*`/`calcular_atr_actual` que dependen de ellas — todas requieren red y no están mockeadas. Si se agrega un mock de ccxt (ej. con `unittest.mock` o `responses`) para simular las respuestas de Binance, esa sería la siguiente capa de tests a escribir.
+
 ## Extender el proyecto
 
 Ver `mejoras_pendientes.md` para el backlog de mejoras conocidas (rendimiento de la opción 6, validación post-generación, vista cross-asset, etc.) — varias quedan más simples de implementar ahora que cada responsabilidad vive en su propio módulo.
-
-**Nota:** el proyecto no tiene tests automatizados todavía (ver `mejoras_pendientes.md`, sección 4). Cualquier cambio en `indicators.py` (RSI/ATR/patrones de vela) o en la paginación de `sources/futures.py` debe verificarse a mano corriendo el programa y revisando el CSV generado.
