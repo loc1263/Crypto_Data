@@ -77,7 +77,8 @@ CryptoData/
     │   └── futures.py       # funding rate, open interest, long/short ratio, taker ratio
     └── exports/            # arman los CSV/JSON finales (una función por opción de menú)
         ├── basic.py         # opciones 1-4 (OHLCV básico)
-        └── quant.py         # opciones 5-6 (cuantitativo completo + multi-timeframe)
+        ├── quant.py         # opciones 5-6 (cuantitativo completo + multi-timeframe)
+        └── atr.py           # opción 7 (ATR14 actual — no exporta archivo, solo imprime)
 ```
 
 Cada módulo tiene una sola responsabilidad, así que agregar algo nuevo casi nunca implica tocar los demás:
@@ -101,16 +102,18 @@ Cada módulo tiene una sola responsabilidad, así que agregar algo nuevo casi nu
 ─────────────────────────────────────────────────
 6. CSV MULTI-TIMEFRAME COMPLETO (5m,15m,1h,4h,1d,1w) — una carpeta con un CSV quant por timeframe
 ─────────────────────────────────────────────────
+7. ATR14 actual (volatilidad, no exporta archivo)
+─────────────────────────────────────────────────
 0. Salir
 ```
 
 Tras ejecutar cualquier opción (excepto `0`), el programa vuelve al menú principal en vez de terminar.
 
-Para las opciones 1–2 solo se pide la cripto (de la lista de `config.json`). Para las opciones 4 y 5 además se pide:
+Para las opciones 1–2 solo se pide la cripto (de la lista de `config.json`). Para las opciones 4, 5 y 7 además se pide:
 - **Timeframe**: `5m`, `15m`, `1h`, `4h`, `1d`.
-- **Rango**: `24h`, `48h`, `7d`, `30d`, `60d`, `90d`, `180d`.
+- **Rango** (solo opciones 4 y 5): `24h`, `48h`, `7d`, `30d`, `60d`, `90d`, `180d`.
 
-La opción 6 solo pide la cripto — el resto de timeframes y rangos son automáticos, ver sección siguiente.
+La opción 6 solo pide la cripto — el resto de timeframes y rangos son automáticos, ver sección siguiente. La opción 7 pide cripto y timeframe, pero no rango: el warmup de descarga se calcula solo (ver más abajo).
 
 ### Salidas por opción
 
@@ -122,6 +125,7 @@ La opción 6 solo pide la cripto — el resto de timeframes y rangos son automá
 | 4 | `exportar_csv_personalizado` | `core.exports.basic` | `output/AAAA-MM-DD_SIMBOLO_TF_RANGO.csv` |
 | 5 | `exportar_csv_quant_completo` | `core.exports.quant` | `output/AAAA-MM-DD_SIMBOLO_TF_RANGO_quant.csv` |
 | 6 | `exportar_multi_timeframe` | `core.exports.quant` | carpeta `output/AAAA-MM-DD_SIMBOLO_MTF/` con un `_quant.csv` por timeframe |
+| 7 | `calcular_atr_actual` | `core.exports.atr` | ninguno — solo imprime el resultado en consola |
 
 ### Opción 6 — Multi-timeframe automático
 
@@ -139,6 +143,14 @@ Descarga 6 timeframes en una sola corrida (`5m, 15m, 1h, 4h, 1d, 1w`) — el mis
 **Nota:** funding/OI/L-S ratio siguen limitados a ~30 días de histórico por Binance (ver Limitaciones) independientemente del timeframe — en 1d/1w esas columnas vendrán con `NaN` para las velas más antiguas, es esperado.
 
 Toma varios minutos: cada timeframe repite las mismas 6 descargas que una corrida individual de la opción 5 (ver `mejoras_pendientes.md` — es una optimización pendiente, no implementada todavía).
+
+### Opción 7 — ATR14 actual
+
+Consulta rápida de volatilidad: pide cripto y timeframe, descarga solo OHLCV (sin funding/OI/L-S/order book/ticker) y calcula el ATR14 (Wilder/RMA, `indicators.add_atr`) de la última vela cerrada. No genera ningún archivo — imprime `Close`, `ATR14` y `ATR14_%` directamente en consola.
+
+El rango de descarga (warmup) se reutiliza de `MTF_DEFAULT_RANGE_DAYS` (la misma tabla de la opción 6) según el timeframe elegido, para que el ATR14 ya esté convergido (Wilder/RMA se estabiliza en unas ~30-50 velas) y no dependa del valor semilla inicial.
+
+Pensada para chequear rápido el tamaño de SL/TP en `%` antes de operar, sin tener que abrir un CSV completo — ver sección 6 de `CLAUDE.md` sobre ajustar el stop/take a `ATR14_%` en vez de un número fijo.
 
 ## Fuentes de datos y columnas generadas
 

@@ -2,6 +2,7 @@
 
 from .config import RANGE_OPTIONS_MS, TIMEFRAME_OPTIONS, load_config
 from .exports import (
+    calcular_atr_actual,
     exportar_csv_365_dias,
     exportar_csv_personalizado,
     exportar_csv_quant_completo,
@@ -53,6 +54,8 @@ def main() -> None:
         print("  6. CSV MULTI-TIMEFRAME COMPLETO  (5m,15m,1h,4h,1d,1w)")
         print("     una carpeta con un CSV quant por timeframe")
         print("  ─────────────────────────────────────────────────")
+        print("  7. ATR14 actual                  (volatilidad, no exporta archivo)")
+        print("  ─────────────────────────────────────────────────")
         print("  0. Salir")
         print("="*55)
         opcion = input("\nElige una opción: ").strip()
@@ -96,6 +99,11 @@ def main() -> None:
             symbol = seleccionar_simbolo()
             rutas = exportar_multi_timeframe(symbol, exchange_name=exchange_name)
             print(f"\n{len(rutas)} archivo(s) generado(s).")
+
+        elif opcion == "7":
+            symbol = seleccionar_simbolo()
+            timeframe = seleccionar_timeframe()
+            calcular_atr_actual(symbol, timeframe, exchange_name=exchange_name)
 
         elif opcion == "0":
             print("Saliendo...")
