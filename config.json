@@ -1,0 +1,10 @@
+{
+    "exchange": "binance",
+    "default_symbol": "DOGE/USDT",
+    "symbols": [
+        "DOGE/USDT",
+        "BTC/USDT",
+        "BNB/USDT",
+        "ZEC/USDT"
+    ]
+}
